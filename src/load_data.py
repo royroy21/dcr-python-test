@@ -27,15 +27,20 @@ class LoadData:
         region_id = self.get_region_id(region_name)
 
         country = Country()
-        found = country.get_by_name(data["name"])
+        name = data["name"]
+        found = country.get_by_name(name)
         if found:
+            # TODO - maybe amend this so entries are updated not skipped?
+            print(f"Skipping {name} as already exists.")
             return
         country.insert(
-            data["name"],
+            name,
             data["alpha2Code"],
             data["alpha3Code"],
             data["population"],
             region_id,
+            data["topLevelDomain"][0],
+            data["capital"],
         )
         print(country.data)
 

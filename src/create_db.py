@@ -1,4 +1,5 @@
 from db import DBO
+from database_migrations import DatabaseMigrations
 
 
 class CreateDB(DBO):
@@ -22,6 +23,7 @@ class CreateDB(DBO):
     def run(self):
         self.cursor.execute(self.CREATE_REGIONS)
         self.cursor.execute(self.CREATE_COUNTRY)
+        DatabaseMigrations().run()
 
 
 if __name__ == "__main__":
