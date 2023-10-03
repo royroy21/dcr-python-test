@@ -1,3 +1,4 @@
+import json
 import sqlite3
 
 conn = None
@@ -38,15 +39,72 @@ class Region(DBO):
             self.create(name)
         self.get_by_name(name)
 
+    @classmethod
+    def region_stats(cls):
+        """
+        For a region returns:
+        That region's name.
+        Number of countries in that region.
+        Total population of that region.
+        """
+        dbo = DBO()
+        select_statement = """
+            SELECT
+                r.name,
+                COUNT(c.id) AS country_count,
+                SUM(c.population) AS total_population
+            FROM
+                region r
+            LEFT JOIN
+                country c ON r.id = c.region_id
+            GROUP BY
+                r.name
+            ORDER BY
+                r.name;
+            """
+        dbo.cursor.execute((select_statement))
+        headers = [header[0] for header in dbo.cursor.description]
+        for row in dbo.cursor.fetchall():
+            obj = cls()
+            obj.data = {k: v for k, v in zip(headers, row)}
+            yield obj
+
+    @classmethod
+    def region_stats_as_json(cls):
+        """
+        Returns region stats in json format.
+        """
+        return json.dumps({
+            "regions": [stats.data for stats in cls.region_stats()]
+        })
+
 
 class Country(DBO):
-    def insert(self, name, alpha2Code, alpha3Code, population, region_id):
+    def insert(
+        self,
+        name,
+        alpha2Code,
+        alpha3Code,
+        population,
+        region_id,
+        topLevelDomain,
+        capital,
+    ):
         insert_query = (
             "INSERT INTO country (name, alpha2Code, alpha3Code, population, "
-            "region_id) VALUES (?, ?, ?, ?, ?)"
+            "region_id, topLevelDomain, capital) VALUES (?, ?, ?, ?, ?, ?, ?)"
         )
         self.cursor.execute(
-            insert_query, (name, alpha2Code, alpha3Code, population, region_id)
+            insert_query,
+            (
+                name,
+                alpha2Code,
+                alpha3Code,
+                population,
+                region_id,
+                topLevelDomain,
+                capital,
+            )
         )
         conn.commit()
         self.get_by_name(name)
